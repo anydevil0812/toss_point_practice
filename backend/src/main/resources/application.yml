@@ -1,6 +1,6 @@
 spring:
     datasource:
-        url: jdbc:mysql://localhost/test_db?serverTimezone=Asia/Seoul
+        url: jdbc:mysql://localhost:3306/toss_db?serverTimezone=Asia/Seoul
         username: toss
         password: point
         driver-class-name: com.mysql.cj.jdbc.Driver
