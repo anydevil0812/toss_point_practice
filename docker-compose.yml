@@ -1,0 +1,38 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:8
+    container_name: toss-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: member
+      MYSQL_USER: toss
+      MYSQL_PASSWORD: point
+    ports:
+      - "3306:3306"
+    volumes:
+      - member_data:/var/lib/mysql
+
+  backend:
+    build: ./backend
+    container_name: toss-backend
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/member
+      SPRING_DATASOURCE_USERNAME: toss
+      SPRING_DATASOURCE_PASSWORD: point
+
+  frontend:
+    build: ./frontend
+    container_name: toss-frontend
+    ports:
+      - "8081:8081"
+    depends_on:
+      - backend
+
+volumes:
+  member_data:
