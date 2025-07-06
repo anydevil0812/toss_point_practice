@@ -1,5 +1,6 @@
 package com.toss.point.response;
 
+import com.toss.point.dto.MemberDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,6 @@ public class Message {
 
     private String message;
 
-    private Object result;
+    private MemberDto result;
 
 }

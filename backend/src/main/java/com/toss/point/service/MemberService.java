@@ -4,5 +4,5 @@ import com.toss.point.dto.MemberDto;
 
 public interface MemberService {
     public MemberDto getMember(Long memberId);
-
+    public MemberDto registerMember(MemberDto memberDto);
 }

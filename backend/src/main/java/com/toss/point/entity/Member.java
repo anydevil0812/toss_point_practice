@@ -26,11 +26,6 @@ public class Member {
 
     private int views;
 
-    @PrePersist
-    public void onCreate() {
-        this.registerDate = LocalDateTime.now();
-    }
-
     public static MemberDto entityToDTO(Member member) {
         if (member == null) return null;
 

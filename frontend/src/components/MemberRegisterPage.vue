@@ -1,0 +1,62 @@
+<template>
+  <div class="container">
+    <h2>회원 등록</h2>
+    <div class="form-group">
+      <label>이름</label>
+      <input v-model="name" type="text" />
+    </div>
+    <button @click="registerMember">등록하기</button>
+    <p class="message">{{ message }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import axios from 'axios'
+
+const name = ref('')
+const message = ref('')
+
+const registerMember = async () => {
+  if (!name.value) {
+    message.value = '이름을 입력해주세요.'
+    return
+  }
+
+  try {
+    console.log(name);
+    const res = await axios.post('/api/member', { name: name.value })
+    message.value = res.data.message
+  } catch (err) {
+    console.error(err)
+    message.value = '회원 등록 중 오류가 발생했습니다.'
+  }
+}
+</script>
+
+<style scoped>
+.container {
+  width: 400px;
+  margin: 0 auto;
+  text-align: left;
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+button {
+  padding: 8px 16px;
+  background-color: #2c3e50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.message {
+  margin-top: 1rem;
+  color: #555;
+}
+</style>
