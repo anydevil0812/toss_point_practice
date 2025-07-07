@@ -8,14 +8,14 @@ import MemberListPage from '@/components/MemberListPage.vue';
 const routes = [
   {
     path: '/',
-    redirect: '/register'
+    redirect: '/list'
   },
   {
     path: '/register',
     component: MemberRegisterPage
   },
   {
-    path: '/view',
+    path: '/info',
     component: MemberInfoPage
   },
   {

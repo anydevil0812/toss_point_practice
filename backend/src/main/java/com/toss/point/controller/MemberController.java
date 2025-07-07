@@ -5,10 +5,15 @@ import com.toss.point.response.Message;
 import com.toss.point.response.Status;
 import com.toss.point.service.MemberServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
+// 정렬 구현
 @CrossOrigin({"*"})
 @RestController
 public class MemberController {
@@ -27,6 +32,14 @@ public class MemberController {
         return new ResponseEntity<>(msg, HttpStatus.OK);
     }
 
+    @GetMapping("/memberList")
+    public ResponseEntity<?> getMemberList(@RequestParam(defaultValue = "0") int page,
+                                           @RequestParam(defaultValue = "5") int size) {
+        Page<MemberDto> resultPage = memberService.getMemberList(PageRequest.of(page, size, Sort.by("id").descending()));
+        Message msg = new Message(Status.OK, "회원 목록 조회 성공", resultPage);
+        return new ResponseEntity<>(msg, HttpStatus.OK);
+    }
+
     @PostMapping("/member")
     public ResponseEntity<?> registerMemberInfo(@RequestBody MemberDto memberDTO) {
         System.out.println("멤버 : " + memberDTO);
@@ -34,5 +47,11 @@ public class MemberController {
         Message msg = new Message(Status.OK, "회원 등록이 정상적으로 완료되었습니다.", result);
         return new ResponseEntity<>(msg, HttpStatus.OK); // 예외처리로 회원가입 실패 구현 필요
     }
+
+    @PutMapping("/member/views")
+    public void updateViews(@RequestParam Long memberId) {
+        memberService.updateView(memberId);
+    }
+
 
 }

@@ -14,6 +14,6 @@ public class Message {
 
     private String message;
 
-    private MemberDto result;
+    private Object result;
 
 }

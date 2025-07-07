@@ -1,11 +1,6 @@
 <template>
   <div class="container">
     <h2>회원 조회</h2>
-    <div class="form-group">
-      <label>회원 ID</label>
-      <input v-model="memberId" type="number" />
-    </div>
-    <button @click="getMember">조회</button>
 
     <div v-if="member" class="result">
       <p><strong>ID:</strong> {{ member.id }}</p>
@@ -19,16 +14,33 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import axios from 'axios'
 
-const memberId = ref('')
+// 1. 현재 라우트 객체에서 쿼리 파라미터(memberId) 추출
+const route = useRoute()
+const memberId = ref(route.query.memberId || '')
 const member = ref(null)
 const message = ref('')
 
 const getMember = async () => {
+  if (!memberId.value) {
+    message.value = '회원 ID를 입력하세요.'
+    return
+  }
+
   try {
-    const res = await axios.get('/member', { params: { memberId: memberId.value } })
+    // 1. 조회수 증가
+    await axios.put('/api/member/views', null, {
+      params: { memberId: memberId.value }
+    })
+
+    // 2. 회원 정보 조회
+    const res = await axios.get('/api/member', {
+      params: { memberId: memberId.value }
+    })
+
     if (res.data.result) {
       member.value = res.data.result
       message.value = res.data.message
@@ -41,7 +53,13 @@ const getMember = async () => {
     message.value = '오류가 발생했습니다.'
   }
 }
+
+// 2. 컴포넌트가 mount 되었을 때 실행
+onMounted(() => {
+  getMember()
+})
 </script>
+
 
 <style scoped>
 .container {
