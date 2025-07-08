@@ -2,6 +2,22 @@
   <div class="container">
     <h2>회원 목록</h2>
 
+    <!-- 정렬 옵션 -->
+    <div class="sort-controls">
+      <label for="sort">정렬 기준:</label>
+      <select id="sort" v-model="sortCol" @change="fetchMembers(0)">
+        <option value="name">이름 가나다순</option>
+        <option value="views">조회순</option>
+        <option value="registerDate">등록 최신순</option>
+      </select>
+
+      <select v-model="sortOrder" @change="fetchMembers(0)">
+        <option value="asc">오름차순</option>
+        <option value="desc">내림차순</option>
+      </select>
+    </div>
+
+    <!-- 회원 목록 테이블 -->
     <table>
       <thead>
         <tr>
@@ -23,6 +39,7 @@
       </tbody>
     </table>
 
+    <!-- 페이지네이션 -->
     <div class="pagination">
       <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 0">이전</button>
 
@@ -53,12 +70,17 @@ const currentPage = ref(0)
 const totalPages = ref(0)
 const pageSize = 5
 
+const sortCol = ref('name')      
+const sortOrder = ref('asc')      
+
 const fetchMembers = async (page = 0) => {
   try {
     const res = await axios.get('/api/memberList', {
       params: {
         page: page,
-        size: pageSize
+        size: pageSize,
+        sortCol: sortCol.value,
+        order: sortOrder.value
       }
     })
 
@@ -89,6 +111,14 @@ onMounted(() => {
   width: 700px;
   margin: 0 auto;
   text-align: center;
+}
+.sort-controls {
+  margin-bottom: 1rem;
+  text-align: right
+}
+.sort-controls select {
+  margin-left: 8px;
+  padding: 4px;
 }
 table {
   width: 100%;

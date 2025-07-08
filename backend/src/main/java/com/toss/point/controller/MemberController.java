@@ -6,8 +6,6 @@ import com.toss.point.response.Status;
 import com.toss.point.service.MemberServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,10 +31,13 @@ public class MemberController {
     }
 
     @GetMapping("/memberList")
-    public ResponseEntity<?> getMemberList(@RequestParam(defaultValue = "0") int page,
-                                           @RequestParam(defaultValue = "5") int size) {
-        Page<MemberDto> resultPage = memberService.getMemberList(PageRequest.of(page, size, Sort.by("id").descending()));
-        Message msg = new Message(Status.OK, "회원 목록 조회 성공", resultPage);
+    public ResponseEntity<?> getFilteredMemberList(@RequestParam(defaultValue = "0") int page,
+                                                   @RequestParam(defaultValue = "5") int size,
+                                                   @RequestParam(required = false) String sortCol,
+                                                   @RequestParam(defaultValue = "asc") String order) {
+
+        Page<MemberDto> members = memberService.getFilteredMemberList(page, size, sortCol, order);
+        Message msg = new Message(Status.OK, "회원 목록 조회 성공", members);
         return new ResponseEntity<>(msg, HttpStatus.OK);
     }
 

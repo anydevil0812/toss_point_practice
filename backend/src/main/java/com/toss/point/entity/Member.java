@@ -42,5 +42,4 @@ public class Member {
         this.views = views + 1;
     }
 
-
 }

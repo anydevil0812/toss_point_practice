@@ -4,7 +4,6 @@
 
     <!-- 네비게이션 -->
     <nav class="nav">
-      <router-link to="/info">회원 조회</router-link>
       <router-link to="/register">회원 등록</router-link>
       <router-link to="/list">회원 목록</router-link>
     </nav>
