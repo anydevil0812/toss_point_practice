@@ -4,9 +4,12 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.toss.point.dto.MemberDto;
+import com.toss.point.dto.PointHistoryDto;
 import com.toss.point.entity.Member;
+import com.toss.point.entity.PointHistory;
 import com.toss.point.entity.QMember;
 import com.toss.point.repository.MemberRepo;
+import com.toss.point.repository.PointHistoryRepo;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,9 @@ public class MemberServiceImpl implements MemberService {
 
     @Autowired
     MemberRepo memberRepo;
+
+    @Autowired
+    PointHistoryRepo pointHistoryRepo;
 
     @Override
     @Transactional // 특정 회원 정보 조회
@@ -89,6 +95,18 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberRepo.findMemberById(memberId);
         member.updateView();
         memberRepo.save(member);
+    }
+
+    @Override
+    @Transactional // 포인트 충전
+    public PointHistoryDto chargePoint(Long memberId, int amount) {
+        Member member = memberRepo.findMemberById(memberId);
+        member.chargePoint(amount);
+        memberRepo.save(member);
+
+        PointHistory ph = PointHistory.createEntity(member, amount);
+        pointHistoryRepo.save(ph);
+        return PointHistory.entityToDTO(ph);
     }
 
 }

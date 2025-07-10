@@ -27,6 +27,8 @@ public class Member {
 
     private int views;
 
+    private int point;
+
     public static MemberDto entityToDTO(Member member) {
         if (member == null) return null;
 
@@ -40,6 +42,10 @@ public class Member {
 
     public void updateView() {
         this.views = views + 1;
+    }
+
+    public void chargePoint(int amount) {
+        this.point = point + amount;
     }
 
 }
