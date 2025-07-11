@@ -11,3 +11,6 @@ spring:
             ddl-auto: update
         properties:
             hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+
+toss:
+    secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6

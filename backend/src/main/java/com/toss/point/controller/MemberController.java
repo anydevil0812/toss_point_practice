@@ -5,28 +5,26 @@ import com.toss.point.dto.PointHistoryDto;
 import com.toss.point.response.Message;
 import com.toss.point.response.Status;
 import com.toss.point.service.MemberServiceImpl;
-import org.apache.tomcat.util.json.JSONParser;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Map;
 
 
 // 정렬 구현
@@ -36,6 +34,9 @@ public class MemberController {
 
     @Autowired
     MemberServiceImpl memberService;
+
+    @Value("${toss.secret-key}")
+    private String secretKey;
 
     // 회원 정보 조회
     @GetMapping("/member")
@@ -77,53 +78,55 @@ public class MemberController {
 
     // 포인트 충전
     @PostMapping("/pointCharge")
-    public ResponseEntity<?> pointCharge(@RequestBody String jsonBody) {
+    public ResponseEntity<?> pointCharge(@RequestBody String jsonBody) throws Exception {
 
         // Toss API는 paymentKey, orderId, amount 3가지만 받도록 정해진 형식의 JSON을 요구
-        // orderId, amount는 숫자 데이터지만 Toss API는 요청 시 해당 데이터 타입을 String으로 요구
+        // amount는 숫자 데이터지만 Toss API는 요청 시 해당 데이터 타입을 String으로 요구
         // => 클라이언트에서 전송한 JSON에서 필요한 3가지 데이터만 추출하여 새 JSON 객체에 담아 API 요청
+        JSONParser parser = new JSONParser();
         String orderId;
         String amount;
         String paymentKey;
-
         try {
-            JSONObject requestData = new JSONObject(jsonBody);
-            paymentKey = requestData.getString("paymentKey");
-            orderId = requestData.getString("orderId");
+            JSONObject requestData = (JSONObject) parser.parse(jsonBody);
+            paymentKey = (String) requestData.get("paymentKey");
+            orderId = (String) requestData.get("orderId");
             amount = requestData.get("amount").toString();
-
-        } catch (JSONException e) {
+        } catch (ParseException e) {
             throw new RuntimeException(e);
-        }
-
+        };
         JSONObject obj = new JSONObject();
         obj.put("orderId", orderId);
         obj.put("amount", amount);
         obj.put("paymentKey", paymentKey);
 
-//        // 시크릿 키 인코딩
-//        String secretKey = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6"; // 실제 서비스 시 변경
-//        String encodedAuth = Base64.getEncoder().encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
-//        String authorizationHeader = "Basic " + encodedAuth;
-//
-//        // WebClient 인스턴스 생성
-//        WebClient webClient = WebClient.builder()
-//                                       .baseUrl("https://api.tosspayments.com/v1")
-//                                       .defaultHeader("Authorization", authorizationHeader)
-//                                       .defaultHeader("Content-Type", "application/json")
-//                                       .build();
-//
-//        // API 호출 및 응답 처리
-//        String responseBody = webClient.post()
-//                                       .uri("/payments/confirm")
-//                                       .bodyValue(obj.toString())
-//                                       .retrieve()
-//                                       .onStatus(status -> status.isError(), clientResponse -> clientResponse.bodyToMono(String.class)
-//                                                .flatMap(error -> Mono.error(new RuntimeException("결제 승인 실패: " + error))))
-//                                       .bodyToMono(String.class)
-//                                       .block(); // 동기 처리
+        Base64.Encoder encoder = Base64.getEncoder();
+        byte[] encodedBytes = encoder.encode((secretKey + ":").getBytes(StandardCharsets.UTF_8));
+        String authorizations = "Basic " + new String(encodedBytes);
 
-        // 상황상 실제 토스 회원 ID 조회는 불가능하므로 토스 회원 ID와 자사 회원 ID가 동일하다는 가정하에 개발 진행
+        // 결제 승인 요청
+        URL url = new URL("https://api.tosspayments.com/v1/payments/confirm");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestProperty("Authorization", authorizations);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestMethod("POST");
+        connection.setDoOutput(true);
+
+        OutputStream outputStream = connection.getOutputStream();
+        outputStream.write(obj.toString().getBytes("UTF-8"));
+
+        int code = connection.getResponseCode();
+        boolean isSuccess = code == 200;
+
+        InputStream responseStream = isSuccess ? connection.getInputStream() : connection.getErrorStream();
+
+        Reader reader = new InputStreamReader(responseStream, StandardCharsets.UTF_8);
+        JSONObject jsonObject = (JSONObject) parser.parse(reader);
+        responseStream.close();
+
+        System.out.println(jsonObject.toJSONString());
+
+        // 포인트 충전 (결제를 요청한 토스 회원과 자사 회원의 신원 일치 여부 판단 기준 필요)
         PointHistoryDto result = memberService.chargePoint(Long.parseLong(orderId), Integer.parseInt(amount));
         Message msg = new Message(Status.OK, "포인트 충전이 정상적으로 완료되었습니다.", result);
         return new ResponseEntity<>(msg, HttpStatus.OK);
